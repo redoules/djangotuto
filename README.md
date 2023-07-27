@@ -361,3 +361,41 @@ True
 >>> c.delete()
 ```
 
+### Acessing the admin web interface
+
+
+Generating admin sites for your staff or clients to add, change, and delete content is tedious work that doesn’t require much creativity. For that reason, Django entirely automates creation of admin interfaces for models.
+
+Django was written in a newsroom environment, with a very clear separation between “content publishers” and the “public” site. Site managers use the system to add news stories, events, sports scores, etc., and that content is displayed on the public site. Django solves the problem of creating a unified interface for site administrators to edit content.
+
+The admin isn’t intended to be used by site visitors. It’s for site managers.
+
+
+```bash 
+python manage.py createsuperuser
+```
+
+fill the informations asked in the interactive formulaire and run the developpement server :
+
+```bash 
+python manage.py runserver
+```
+
+and go to the page <siteURL>/admin
+
+you may need to allow CRSF tokens for other hosts if the server is not running locally by adding in ```settings.py``` the variable ```CSRF_TRUSTED_ORIGINS```
+
+```python
+CSRF_TRUSTED_ORIGINS = ["https://redoules-organic-xylophone-j64vr4ppw7f7gj-8000.preview.app.github.dev"]
+```
+
+
+Make the Polls model editable by the admin by modifiying the ```admin.py``` file in the polls folder:
+
+```python 
+from django.contrib import admin
+from .models import Question, Choice
+
+admin.site.register(Question)
+admin.site.register(Choice)
+```

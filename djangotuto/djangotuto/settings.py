@@ -25,7 +25,8 @@ SECRET_KEY = "django-insecure-!364h!r+-e6y=fxyfuvso1^(k^2fnv1+wx#qxs6w5d^mcoy79h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "https://redoules-organic-xylophone-j64vr4ppw7f7gj-8000.preview.app.github.dev"]
+CSRF_TRUSTED_ORIGINS = ["https://redoules-organic-xylophone-j64vr4ppw7f7gj-8000.preview.app.github.dev"]
 
 
 # Application definition
