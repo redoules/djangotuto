@@ -574,3 +574,43 @@ here is the html code for the template
 {% endfor %}
 </ul>
 ```
+
+
+It is a good practice to specify a namespace with the variable ```app_name``` in the ```urls.py``` file so that django explicitly know which view to load 
+
+```python 
+from django.urls import path
+
+from . import views
+
+
+app_name = "polls"
+
+urlpatterns = [
+    # ex: /polls/
+    path("", views.index, name="index"),
+    # ex: /polls/5/
+    path("<int:question_id>/", views.detail, name="detail"),
+    # ex: /polls/5/results/
+    path("<int:question_id>/results/", views.results, name="results"),
+    # ex: /polls/5/vote/
+    path("<int:question_id>/vote/", views.vote, name="vote"),
+
+]
+
+```
+
+And change the index.html file to explicitly specify the app name :
+
+```html
+{% if latest_question_list %}
+    <ul>
+    {% for question in latest_question_list %}
+    <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+```
+
