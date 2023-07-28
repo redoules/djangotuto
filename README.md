@@ -399,3 +399,178 @@ from .models import Question, Choice
 admin.site.register(Question)
 admin.site.register(Choice)
 ```
+
+
+### Creating views for the polls application 
+
+A view is a public page of the application. For a blog you may find view for the homepage, the article view, a view listing the articles published in a certain year and so on. 
+
+For the polls application we will create the 4 views :
+ * Question “index” page – displays the latest few questions.
+ * Question “detail” page – displays a question text, with no results but with a form to vote.
+ * Question “results” page – displays results for a particular question.
+ * Vote action – handles voting for a particular choice in a particular question.
+
+The views are created in the ```views.py``` : 
+
+```python
+def detail(request, question_id):
+    return HttpResponse("You're looking at question %s." % question_id)
+
+
+def results(request, question_id):
+    response = "You're looking at the results of question %s."
+    return HttpResponse(response % question_id)
+
+
+def vote(request, question_id):
+    return HttpResponse("You're voting on question %s." % question_id)
+```
+
+and have to be wired to a URL in the ```urls.py``` 
+
+```python 
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    # ex: /polls/
+    path("", views.index, name="index"),
+    # ex: /polls/5/
+    path("<int:question_id>/", views.detail, name="detail"),
+    # ex: /polls/5/results/
+    path("<int:question_id>/results/", views.results, name="results"),
+    # ex: /polls/5/vote/
+    path("<int:question_id>/vote/", views.vote, name="vote"),
+]
+```
+
+The urlpatterns defined above explain how to collect the arguments in the URL that are sent to the view parameters. 
+The view has to return a HttpResponse or return a 404 error.
+
+Let's create a view that can interact with the database by using the django API
+
+```python
+from django.http import HttpResponse
+
+from .models import Question
+
+
+def index(request):
+    latest_question_list = Question.objects.order_by("-pub_date")[:5]
+    output = ", ".join([q.question_text for q in latest_question_list])
+    return HttpResponse(output)
+```
+
+Now, if we want to split the interaction with the database and the formatting of the HTML, we can use a template.
+This can be done by creating a ```templates``` folder. Let's create another folder with the same name as the app (```polls```) and create a index.html file within it containing :
+
+```html
+{% if latest_question_list %}
+    <ul>
+    {% for question in latest_question_list %}
+        <li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+```
+
+We can then update the view in order to load and populate the template.
+Notice that the links are hard coded "/polls/questionid". In order to make the view independant form the route we can rewrite the template like this 
+
+```html
+{% if latest_question_list %}
+    <ul>
+    {% for question in latest_question_list %}
+        <li><a href="{% url 'detail' question.id %}">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+```
+
+```python
+from django.http import HttpResponse
+from django.template import loader
+
+from .models import Question
+
+
+def index(request):
+    latest_question_list = Question.objects.order_by("-pub_date")[:5]
+    template = loader.get_template("polls/index.html")
+    context = {
+        "latest_question_list": latest_question_list,
+    }
+    return HttpResponse(template.render(context, request))
+```
+
+
+A shorter way to write the view is by using a django shortcut ```render``` : 
+```python 
+from django.shortcuts import render
+
+from .models import Question
+
+
+def index(request):
+    latest_question_list = Question.objects.order_by("-pub_date")[:5]
+    context = {"latest_question_list": latest_question_list}
+    return render(request, "polls/index.html", context)
+    
+```
+
+
+#### Raising a 404 page 
+
+Now, let’s tackle the question detail view – the page that displays the question text for a given poll. Here’s the view:
+
+
+```python
+from django.http import Http404
+from django.shortcuts import render
+
+from .models import Question
+
+
+# ...
+def detail(request, question_id):
+    try:
+        question = Question.objects.get(pk=question_id)
+    except Question.DoesNotExist:
+        raise Http404("Question does not exist")
+    return render(request, "polls/detail.html", {"question": question})
+    
+```
+
+
+a better way to do that is to use the shortcut ```get_object_or_404```
+
+```python 
+from django.shortcuts import get_object_or_404, render
+
+from .models import Question
+
+
+# ...
+def detail(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    return render(request, "polls/detail.html", {"question": question})
+    
+```
+
+
+here is the html code for the template 
+
+```html
+<h1>{{ question.question_text }}</h1>
+<ul>
+{% for choice in question.choice_set.all %}
+    <li>{{ choice.choice_text }}</li>
+{% endfor %}
+</ul>
+```
