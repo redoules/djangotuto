@@ -614,7 +614,7 @@ And change the index.html file to explicitly specify the app name :
 {% endif %}
 ```
 
-### Generic views
+### Working with views
 
 #### Form
 
@@ -708,3 +708,56 @@ def results(request, question_id):
 
 ```
 
+#### Generic views
+
+Django provides a shortcut for creating views that display a model object’s detail page and a list of a particular type of object. These views are called generic views.
+
+We first edit the ```urls.py``` file to use the generic views 
+
+```python
+from django.urls import path
+
+from . import views
+
+app_name = "polls"
+urlpatterns = [
+    path("", views.IndexView.as_view(), name="index"),
+    path("<int:pk>/", views.DetailView.as_view(), name="detail"),
+    path("<int:pk>/results/", views.ResultsView.as_view(), name="results"),
+    path("<int:question_id>/vote/", views.vote, name="vote"),
+]
+```
+
+We then edit the ```views.py``` file to use the generic views 
+
+```python
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
+from django.views import generic
+
+from .models import Choice, Question
+
+
+class IndexView(generic.ListView):
+    template_name = "polls/index.html"
+    context_object_name = "latest_question_list"
+
+    def get_queryset(self):
+        """Return the last five published questions."""
+        return Question.objects.order_by("-pub_date")[:5]
+
+
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = "polls/detail.html"
+
+
+class ResultsView(generic.DetailView):
+    model = Question
+    template_name = "polls/results.html"
+
+
+def vote(request, question_id):
+    ...  # same as above, no changes needed.
+```
